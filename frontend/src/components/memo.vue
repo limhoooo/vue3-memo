@@ -42,21 +42,17 @@ export default {
       const content = prompt("수정해주세요.", state.data[idx]);
       if (!content) return;
       axios.post("/api/edit", { content, idx }).then((res) => {
-        if (res.status === 200) {
-          getList();
-        }
+        if (res.status === 200) getList();
       });
     };
     const deleteFnc = (idx) => {
       axios.post("/api/delete", { idx }).then((res) => {
-        if (res.status === 200) {
-          getList();
-        }
+        if (res.status === 200) getList();
       });
     };
     const getList = () => {
       axios.get("/api/memos").then((res) => {
-        state.data = res.data;
+        if (res.status === 200) state.data = res.data;
       });
     };
     const oncreated = () => {
