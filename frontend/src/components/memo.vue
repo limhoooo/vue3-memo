@@ -1,13 +1,16 @@
 <template>
   <div class="memo">
     <div class="act">
-      <input type="text" v-model="state.inputData" />
+      <input class="input" type="text" v-model="state.inputData" />
       <button class="btn btn-primary" @click="addFnc">+ 추가</button>
     </div>
     <template v-if="state.data.length > 0">
       <ul>
-        <li v-for="(obj, idx) in state.data" :key="idx">
+        <li v-for="(obj, idx) in state.data" :key="idx" @click="updateFnc(idx)">
           {{ obj }}
+          <div onclick="event.cancelBubble=true">
+            <button @click="deleteFnc(idx)">X</button>
+          </div>
         </li>
       </ul>
     </template>
@@ -27,18 +30,44 @@ export default {
       inputData: "",
     });
     const addFnc = () => {
-      state.data.push(state.inputData);
-      state.inputData = "";
+      const content = state.inputData;
+      axios.post("/api/memos", { content }).then((res) => {
+        if (res.status === 200) {
+          getList();
+          state.inputData = "";
+        }
+      });
     };
-    const oncreated = () => {
+    const updateFnc = (idx) => {
+      const content = prompt("수정해주세요.", state.data[idx]);
+      if (!content) return;
+      axios.post("/api/edit", { content, idx }).then((res) => {
+        if (res.status === 200) {
+          getList();
+        }
+      });
+    };
+    const deleteFnc = (idx) => {
+      axios.post("/api/delete", { idx }).then((res) => {
+        if (res.status === 200) {
+          getList();
+        }
+      });
+    };
+    const getList = () => {
       axios.get("/api/memos").then((res) => {
         state.data = res.data;
       });
+    };
+    const oncreated = () => {
+      getList();
     };
     oncreated();
     return {
       state,
       addFnc,
+      updateFnc,
+      deleteFnc,
     };
   },
 };
@@ -49,6 +78,14 @@ export default {
   .act {
     padding: 10px 10px 5px 5px;
     text-align: right;
+    display: flex;
+    justify-content: center;
+    .input {
+      width: 75%;
+    }
+    .btn {
+      width: 25%;
+    }
   }
   ul {
     border: 1px solid #eee;
@@ -59,6 +96,8 @@ export default {
       padding: 15px;
       margin: 5px;
       border: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
     }
   }
   .noneMemo {
